@@ -1,0 +1,243 @@
+#!/usr/bin/env ruby
+
+# == Synopsis
+#
+# svn_wc_tree: install the svn_wc_tree web application.
+#
+# == Usage
+#
+# svn_wc_tree [OPTIONS]
+#
+# --help, -h:
+#    show help
+#
+# --html, -l [html_dir]:
+#    Move all web files to the directory path specified. 
+#    A directory called svn_wc_tree will be created at this path.
+#
+# --cgi, -c [cgi_dir]:
+#    Move the included CGI script to the path specified.
+#    path/directory must exist and must be able to execute CGI scripts
+#
+# --post_to_url, -u [post_to_url]:
+#    a URL that will receive AJAX requests and return the required JSON.
+#    (see the CGI script provided)
+#
+# --php, -p [php]:
+#    Run as a PHP application. (use only as last choice)
+#    (Ruby is still required; CGI not needed)
+#
+# --conf_location, -u [conf_location]:
+#    location (filesystem path) of your svn_wc.conf file (readable by 'httpd
+#    runs as' owner)
+#
+# --copy_conf_from, -f [copy_conf_from]:
+#    copy your conf file (svn_conf.yaml) from filesystem path to 
+#    (copy_conf_to)
+#
+# --copy_conf_to, -t [copy_conf_to]:
+#    copy your conf file (svn_conf.yaml) to filesystem path from
+#    (copy_conf_from)
+#
+#
+# Example: 
+#
+#   # install into /var/htdocs, post to PHP, use conf file already at location
+#   sudo svn_wc_tree --html /var/htdocs --php true \
+#                    --conf_location /opt/svn_wc_tree/svn_conf.yaml
+#
+#   # install (app/html/js) into /var/htdocs
+#   # install CGI into /var/cgi-bin
+#   # post to CGI script at 'http://example.com/cgi-bin/svn_wc_broker.cgi' 
+#   # (install at path: /var/cgi-bin)
+#   # use conf file already at location
+#   svn_wc_tree --html /var/htdocs --cgi /var/cgi-bin \ 
+#               --post_to_url 'http://example.com/cgi-bin/svn_wc_broker.cgi' \
+#               --conf_location /opt/conf/svn_conf.yaml
+#
+#   # install (app/html/js) into /var/htdocs
+#   # install CGI into /var/cgi-bin
+#   # post to CGI (pre existing script) at 'cgi-bin/cgi.rb' (must be relative
+#   #   to the app html dir, or fully qualified path)
+#   # conf file path already added to the pre existing cgi you wrote
+#   sudo svn_wc_tree --html /var/htdocs --post_to_url 'cgi-bin/cgi.rb'
+#
+#   # install app into /var/www
+#   # install CGI into /usr/lib/cgi-bin
+#   # post to CGI (use apps provided cgi script - installed with --cgi)
+#   #       using fully qualified path)
+#   # copy conf file from /tmp/svn_conf.yaml to /usr/local/svn_wc_tree dir/)
+#   sudo svn_wc_tree --html /var/www --cgi /usr/lib/cgi-bin \
+#    --post_to_url 'http://localhost/cgi-bin/svn_wc_broker.cgi' \
+#    --copy_conf_from  /tmp/svn_conf.yaml \
+#    --copy_conf_to /usr/local/svn_wc_tree
+#
+#   # install app into `$HOME`/public_html
+#   # post to PHP (resource provided by this app)
+#   # copy conf file from, to
+#   sudo svn_wc_tree --html ~/public_html --php true \
+#    --copy_conf_from `pwd`/svn_conf.yaml \
+#    --copy_conf_to /home/dwright/test_svn/wc
+
+require 'getoptlong'
+require 'rdoc/usage'
+require 'fileutils'
+
+opts = GetoptLong.new(
+  [ '--help', '-h',           GetoptLong::NO_ARGUMENT],
+  [ '--html', '-l',           GetoptLong::REQUIRED_ARGUMENT],
+  [ '--post_to_url', '-u',    GetoptLong::OPTIONAL_ARGUMENT],
+  [ '--cgi',  '-c',           GetoptLong::OPTIONAL_ARGUMENT],
+  [ '--php',  '-p',           GetoptLong::OPTIONAL_ARGUMENT],
+  [ '--conf_location', '-o',  GetoptLong::OPTIONAL_ARGUMENT],
+  [ '--copy_conf_from', '-f', GetoptLong::OPTIONAL_ARGUMENT],
+  [ '--copy_conf_to'  , '-t', GetoptLong::OPTIONAL_ARGUMENT]
+)
+
+html_dir       = nil
+cgi_dir        = nil
+@php           = false
+post_to_url    = 'index.php' # assume php mode
+conf_location  = nil
+copy_conf_from = nil
+copy_conf_to   = nil
+
+opts.each do |opt, arg|
+  case opt
+    when '--help'
+      RDoc::usage
+    when '--html'
+      if arg == '' then puts 'path cannot be empty!' and exit 1
+      else html_dir = arg
+      end
+    when '--cgi'
+      if arg != '' then cgi_dir = arg end
+    when '--php'
+      if arg != '' then @php = true end
+    when '--post_to_url'
+      #if php then raise ArgumentError, 'post_to_url, is not used when php'
+      if arg != ''  then post_to_url = arg end
+    when '--conf_location'
+      if arg != '' then conf_location = arg end
+    when '--copy_conf_from'
+      if arg != '' then copy_conf_from = arg end
+    when '--copy_conf_to'
+      if arg != '' then copy_conf_to = arg end
+  end
+end
+
+# methods
+
+def handle_conf(copy_conf_from, copy_conf_to, cgi_dir=nil)
+  raise "#{copy_conf_to} is a file!" if File.file? copy_conf_to
+  FileUtils.mkdir copy_conf_to unless File.directory? copy_conf_to
+
+  begin
+    FileUtils.cp copy_conf_from, copy_conf_to
+  rescue
+    #puts "Destination conf file exists #{copy_conf_to}"
+  end
+  # now edit lib to set conf_file path
+  conf_abs_path = File.join(copy_conf_to, File.basename(copy_conf_from))
+  set_conf_file_in_cgi(cgi_dir, conf_abs_path) if cgi_dir
+end
+
+def set_conf_file_in_cgi(cgi_dir, conf_location)
+  cgi_file = File.join(cgi_dir, 'svn_wc_broker.cgi')
+  File.open(cgi_file, 'r+') do |cf|
+    lines = cf.readlines 
+    lines.each do |el|
+      el.gsub! /CONF_FILE = nil/, 
+               "CONF_FILE = '#{conf_location}'"
+      # dont print header when run under php
+      el.gsub! /print cgi.header/, '#print cgi.header' if @php 
+    end
+    cf.pos = 0
+    cf.print lines
+    cf.truncate(cf.pos)
+  end
+end
+
+def set_cgi_path_in_js(html_dir, post_to_url)
+  js_file = File.join(html_dir, 'js', 'swt.js')
+  File.open(js_file, 'r+') do |fst|
+    lines = fst.readlines 
+    lines.each do |el|
+      el.gsub! /var POST_URL = '.*;/, 
+               "var POST_URL = '#{post_to_url}';"
+    end
+    fst.pos = 0
+    fst.print lines
+    fst.truncate(fst.pos)
+  end
+end
+
+# actions
+if not html_dir
+  puts "Required argument missing. try --help"
+  exit 0
+end
+
+# ok, html_dir should be set
+swt_gem_ins_dir = File.join(File.dirname(__FILE__), '..')
+
+puts 'Exception: cannot find this lib gem install path' and exit 1 \
+    unless File.directory? swt_gem_ins_dir
+
+html_dest = File.join(html_dir, 'svn_wc_tree')
+begin
+  # copy web app (html related) files
+  FileUtils.rm_rf html_dest
+  FileUtils.mkdir html_dest
+  FileUtils.cp_r(File.join(swt_gem_ins_dir, 'svn_wc_tree/'), html_dir)
+rescue Exception => e
+  puts "line:#{__LINE__} Exception: #{e.message}" and exit 1
+end
+
+# cgi script
+cgi_path = html_dest if @php
+# if set, will overwrite php cgi url
+cgi_path = cgi_dir if cgi_dir
+
+if cgi_path
+  begin
+    # copy web app cgi script to web app specified location
+    FileUtils.cp(File.join(swt_gem_ins_dir, 'cgi', 'svn_wc_broker.cgi'), cgi_path)
+  rescue Exception => e
+    puts "line:#{__LINE__} Exception: #{e.message}"
+    exit 1
+  end
+end
+
+if conf_location
+  if cgi_path and conf_location
+    begin
+      set_conf_file_in_cgi(cgi_path, conf_location)
+    rescue Exception => e
+      puts "line:#{__LINE__} Exception: #{e.message}"
+      exit 1
+    end
+  end
+end
+
+begin
+  # edit js/swt.js file to full web accessible CGI URL
+  set_cgi_path_in_js(html_dest, post_to_url)
+rescue Exception => e
+  puts "line:#{__LINE__} Exception: #{e.message}"
+  exit 1
+end
+
+begin
+  # conf file
+  if copy_conf_from or copy_conf_to
+    if not (copy_conf_from and copy_conf_to)
+      puts 'if using "copy_", both copy_conf_to and copy_conf_from must be set'
+      exit 1
+    end
+    handle_conf(copy_conf_from, copy_conf_to, cgi_path)
+  end
+rescue Exception => e
+  puts "line:#{__LINE__} Exception: #{e.message}"
+  exit 1
+end

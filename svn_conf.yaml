@@ -1,0 +1,14 @@
+##svn_repo_master        : file:///tmp/svn/repo_test
+##svn_repo_master        : svn+ssh:///tmp/svnrepo
+#svn_repo_master        : svn+ssh://svn_test_user@localhost/tmp/svnrepo
+##svn_repo_master        : svn+ssh://example.com/tmp/svnrepo
+#svn_repo_working_copy  : /tmp/repo_test
+#svn_user               : svn_test_user
+#svn_pass               : svn_test_pass
+#svn_repo_config_path   : /tmp/config
+
+svn_repo_master        : file:///home/dwright/test_svn/test_repo
+svn_repo_working_copy  : /home/dwright/test_svn/wc
+svn_repo_config_path   : /home/dwright/test_svn/
+force_checkout         : true
+

@@ -1,0 +1,333 @@
+= svn_wc_tree
+
+A Web application front end that operates on the working copy of an
+Subversion (SVN) repository. (See Requirements)
+
+
+== VERSION:
+
+Version 0.0.5
+
+NOTE: THIS IS ALPHA QUALITY SOFTWARE, use at your own risk!
+
+
+== SYNOPSIS:
+
+   Install easy option 1:
+
+   PHP INSTALL:
+   $ sudo svn_wc_tree --html /var/www --php true --conf_location /opt/svn_conf.yaml
+
+   Navigate browser (javascript required) to to html docs dir specified above:
+   (i.e. DocumentRoot /var/www)
+   http://localhost/svn_wc_tree/index.html
+
+
+   Install easy option 2:
+
+   CGI INSTALL:
+   $ sudo svn_wc_tree --html /var/www  --cgi /usr/lib/cgi-bin \
+                      --post_to_url 'http://localhost/cgi-bin/svn_wc_broker.cgi' \
+                      --conf_location /opt/svn_conf.yaml
+
+   Navigate browser (javascript required) to to html docs dir specified above:
+   (i.e. DocumentRoot /var/www)
+   http://localhost/svn_wc_tree/index.html
+
+
+== DESCRIPTION:
+
+This CGI/AJAX Web Application is designed to operate on a working copy of 
+a remote Subversion repository.
+
+Currently, it provides only very basic SVN functions (see FEATURES).
+
+It does not do any sort of repository administration type operations, just 
+working directory repository management.
+
+== FEATURES:
+
+* Current supported operations
+  - open
+  - checkout/co
+  - list/ls
+  - update/up
+  - commit/ci
+  - status/stat
+  - diff
+  - info
+  - add
+  - revert
+  - delete
+  - svn+ssh is our primary connection use case, however can connect to and operate on file:/// URI as well
+
+== REQUIREMENTS:
+
+* Requires that the Subversion (SWIG) Ruby Bindings are installed. 
+* Requires that the svn_wc gem is installed. (i.e. sudo gem install svn_wc)
+* Ruby (tested with 1.8.6, 1.8.7)
+* CGI or PHP enabled
+
+== INSTALL:
+
+This library is intended to be installed as a Gem. (hosted on gemcutter.org)
+
+  $ gem install svn_wc_tree
+
+
+== OVERVIEW:
+
+This serverfault post describes what I was looking for and what I am trying to 
+satisfy with this web application:
+
+    "I want a web interface to manage a WORKING COPY of a repository (NOT the repository itself). 
+    There are lots of already made tools to manage the repository, but I also have not found a 
+    single one to manage a remote working copy.  I need a user-friendly interface to perform stuff like:
+    "svn status", "svn info", "svn commit", "svn update", "svn revert",
+    "svn add", "svn delete"  and "svn diff"... upon a WORKING COPY which resides
+    in a remote host.  (I'm not interested in the repository, I'm interested in the WORKING COPY
+    management.)
+    I don't want to do SSH login and perform these commands. I want to enable
+    not-advanced users to do some stuff in the hosted working copy, using a
+    web interface,...
+
+* {serverfault link}[http://serverfault.com/questions/52532/svn-web-interface/67788#67788]
+
+== USAGE:
+
+Javascript enabled web browser
+
+== DIAGNOSTICS
+
+* Errors:
+  An error such as: "Error: Error: can't convert nil into String" probably
+  means that you did not set CONF_FILE in the cgi file. (post install)
+ 
+  An error such as: 
+  /build/buildd/subversion-1.6.5dfsg/subversion/libsvn_ra_svn/streams.c:75:
+  Svn::Error::RaSvnConnectionClosed: 
+
+  probably means the app cannot make an ssh connection to the host. 
+  solution: set up ssh keys for the user the app is trying to connect as
+  (note, this will probably the user your web server is running as)
+
+  "status check Failed:
+  /build/buildd/subversion-1.6.5dfsg/subversion/libsvn_wc/lock.c:572:
+  Svn::Error::WcNotDirectory: '/tmp/repo' is not a working copy
+  #<SvnWc::RepoAccess:0xb73a0874>"
+  
+  I don't remember
+ 
+
+  An error such as: 
+    Repository: undefined
+    User:  undefined
+    Config File: undefined
+
+    Error: can't convert nil into String
+
+    Probably means you haven't specified a config file path.
+
+* Exceptions: 
+
+== CONFIGURATION AND ENVIRONMENT:
+
+* In order to make use of this module,...
+
+   configuration file: (is the the YAML format)
+
+   $ cat svnwc_conf.yaml 
+   # svn connection info
+   #svn_repo_master       : file:///tmp/svnrepo
+   svn_repo_master        : svn+ssh://example.com/opt/svnrepo
+   svn_repo_working_copy  : /usr/local/svn/repo_root
+   svn_user               : svn_test_user
+   svn_pass               : svn_test_pass
+   svn_repo_config_path   : /opt/config
+
+* possibly you want to integrate this seamlessly into your existing web 
+  application, an iframe may work well for this. The iframe height parameter
+  does not work as expected, this work around hack helps. 
+  (credit: http://guymal.com/mycode/100_percent_iframe/)
+  
+  <script language="javascript">
+  <!--
+    function resize_iframe(id) {
+      var height=window.innerWidth; //Firefox
+      if (document.body.clientHeight) height=document.body.clientHeight; //IE
+      document.getElementById(id).style.height=parseInt(height-document.getElementById(id).offsetTop-8)+"px"; //resize the iframe according to the size of the window
+      //document.getElementById(id).height=document.body.offsetHeight-document.getElementById(id).offsetTop-26;
+    }
+  //-->
+  </script>
+  <table style="height:100%;width:100%">
+   <tbody>
+    <tr>
+     <td style="height:100%;width:100%">
+       <iframe id='svn_frame' src="/svn_wc_tree/index.html" width="100%"
+               height="100%" marginwidth="0" marginheight="0"
+               vspace="0" hspace="0" frameborder="1"
+               onload='resize_iframe("svn_frame")'
+               style="margin:0; padding:0; height:100%;width:100%;
+              display:block;border:none;">
+         <p>Your browser does not support iframes.</p>
+       </iframe>
+     </td>
+    </tr>
+   </tbody>
+  </table>
+
+* If you want to integrate this into a rails web app. (and eliminate cgi).
+  Create a new controller such as:
+
+  begin; require 'rubygems'; rescue LoadError; end
+  require 'fileutils'
+  require 'svn_wc_broker'
+  
+  class SvnController < ApplicationController
+    #before_filter :session_required
+  
+    include SvnWcBroker
+  
+    def index
+      @conf_file = '/var/www/config/svn_conf.yaml'
+  
+      if request.get? then render :template => 'svn/index' and return false end
+  
+      if request.post?
+       set_conf_file(@conf_file)
+       render :json => handle_responses(params) and return false
+      end
+    end
+
+  end
+
+  And Create a new view (svn/index.html.erb) with the iframe content from above. 
+
+
+* NOTE/WARNING: Keep in mind, that whatever approach you take.
+                "/svn_wc_tree/index.html" is accessible to the public, 
+                which is very BAD. (see mod_rewrite rules below).
+                Please provide some protection to the web accessible 
+                SVN tree page, "/svn_wc_tree/index.html", an .htaccess or
+                cookie scheme, still depending on your set up anyone with 
+                access to your web app will have rw access to this svn page.
+
+* Here are some mod_rewrite rules you could use at a mininum. 
+  # add to  httpd.conf (or last resort .htaccess)
+
+  # add rules for svn_wc_tree
+  # disallow direct access to svn_wc_tree/index.html
+  #RewriteCond %{HTTP_REFERER} ^$ [NC]
+  # only allow this referrer to access svn_wc_tree/index.html
+  RewriteCond %{HTTP_REFERER} !^http://(.*)/cgi-bin/svn_wc_broker.cgi [NC]
+  RewriteRule ^(/svn_wc_tree/index.html)$ -  [F,L]
+  # allow other resources to pass for svn_wc_tree
+  RewriteRule ^(/svn_wc_tree/)(.*)   $1$2    [PT,L]
+
+
+* NOTE: The most efficient use of this web app is to run it as a controller in a ROR
+  application, the second most efficient way is as a CGI app, if you have no
+  choice run as a PHP app, which is the easiest (and slowest) method.
+
+* This library should work anywhere that the 'subversion-rubybindings' are installed
+
+== TESTS:
+
+  TODO: (cant figure out how to make this work on the JsTree ajax widget,
+        will look into selinium)
+  <strike>Tests, this webapp has functional tests written against the front end.
+  The tests are written in celerity, which is API compatible with Watir.
+  (more at {Celerity}[http://celerity.rubyforge.org/])
+  Celerity is written in jruby, so to run the tests, you'll need jruby 
+  and celerity installed.</strike>
+
+  basic REST interface tests in progress,...
+  
+  on Ubuntu.
+  $ sudo apt-get install jruby1.2 
+  $ sudo jruby -S gem install celerity
+  Successfully installed celerity-0.7.9
+  $ jruby tests/front_end_functional.rb 
+
+
+== DEPENDENCIES:
+
+  require 'cgi'
+  require 'yaml'
+  require 'json'
+  require 'pathname'
+  require 'fileutils'
+  require 'find'
+  require 'svn_wc_broker' (provided with svn_wc_tree)
+  require 'svn_wc'
+
+
+== INCOMPATIBILITIES:
+
+javascript disabled and non javascript enabled browsers
+
+
+== BUGS AND LIMITATIONS:
+
+This library currently provides only very basic svn operations.
+
+
+== SUPPORT:
+
+ri SvnRepoClient
+ri SvnWcBroker
+ri SvnWc::RepoAccess
+svn_wc_tree --html
+
+* {svn_wc_tree general page}[http://www.dwright.us/misc/svn_wc_tree]
+
+
+== CHANGELOG:
+
+See the ChangeLog file for details.
+
+
+== LICENSE AND COPYRIGHT:
+
+Copyright 2010 David Wright (david_v_wright@yahoo.com), all rights reserved.
+
+
+svn_wc_tree 0.0.5 is released under the LGPL license.
+
+
+== AUTHOR:
+
+Author:: {David Wright}[http://www.dwright.us/] <david_v_wright@yahoo.com>
+
+
+=== KEYWORDS:
+
+* Ruby (SWIG) SVN bindings, ruby+svn, ruby, subversion, svn, rubysvn, Subversion extensions in Ruby, Web Application, GUI 
+
+
+== ACKNOWLEDGEMENTS:
+
+thanks to the poster on serverfault for identifying what I was also looking for
+
+== ERRATA:
+
+For testing it is also possible to set the $SVN_SSH variable specifying the
+private key to use with -i so that you can try connecting as different users.
+For example:
+
+export SVN_SSH="ssh -i /home/dwright/.ssh/alt.key
+
+
+* The --post_to_url is a required argument, which set's the Javascript file
+  to point to the correct url, you shouldn't ever have to but can hand edit
+  the file:
+  vim {DocumentRoot}/svn_wc_tree/js/swt.js 
+  // change for your host if necessary
+  var POST_URL = 'http://localhost/cgi-bin/svn_wc_broker.cgi';
+
+   Edit:
+   $ sudo vim /usr/lib/cgi-bin/svn_wc_broker.cgi
+   # set conf file path to your svn repo info config file
+   CONF_FILE = 'abs_path/to/svn_conf_file.yaml'
+

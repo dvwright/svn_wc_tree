@@ -1,0 +1,16 @@
+version 0.0.5
+* bug fix: default svn_status uses filter if set
+
+version 0.0.4
+* dir entries now grouped togther
+* added filter(s): regex and amount. (amount filter is very beta)
+* can filter svn_status and svn_list (set field use right click js menu)
+  (for instance,  use filter with svn_list to delete unneeded files)
+
+version 0.0.3
+* added (installer unit tests)
+
+version 0.0.2
+* initial release
+* run as PHP app (Ruby installation still required)
+* jQuery and JsTree bundled with app, will just be deps in the future

@@ -1,0 +1,142 @@
+<!--
+# Copyright (c) 2009 David Wright
+#
+# You are free to modify and use this file under the terms of the GNU LGPL.
+# You should have received a copy of the LGPL along with this file.
+#
+# Alternatively, you can find the latest version of the LGPL here:
+#
+#      http://www.gnu.org/licenses/lgpl.txt
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+-->
+
+<html>
+<head>
+  <meta http-equiv="cache-control" content="no-cache">
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta http-equiv="expires" content="Mon, 22 Jul 2002 11:12:01 GMT">
+  <meta http-equiv="pragma" content="no-cache">
+  <script type="text/javascript" src="js/jquery-1.3.2.js"></script>
+  <script type="text/javascript" src="js/jquery.cookie.js"></script>
+  <script type="text/javascript" src="js/jquery.blockUI-2.31.js"></script>
+  <script type="text/javascript" src="js/source/jquery.tree.js"></script>
+  <script type="text/javascript" src="js/source/plugins/jquery.tree.checkbox.js"></script>
+  <script type="text/javascript" src="js/source/plugins/jquery.tree.contextmenu.js"></script>
+  <script type="text/javascript" src="js/swt.js"></script>
+  <link   type="text/css"  rel="stylesheet" href="css/swt.css" />
+
+  <script type="text/javascript">
+  //values = cgi.cookies['svn_wc_tree_conf']
+  //$.cookie("example", "foo", { path: '/admin', expires: 7 });
+  //$.cookie("svn_wc_tree_conf", "foo", { path: '/admin', expires: 7 });
+  //$.cookie("swt_cgi", "foo", { path: '/admin', expires: 7 });
+  </script>
+
+</head>
+<body>
+
+<!--
+<form action='cgi/svn_repo_broker.cgi' method='post'>
+<fieldset style='width:90%' id="svn_form">
+  <legend  style='width:90%'>Svn Actions:</legend>
+
+  <label for="update">Update</label>
+  <input type="radio" name="svn_action" value="Update"
+         id="update" class="ui-state-default ui-corner-all">
+  <span>|</span>
+
+  <label for="commit">Commit</label>
+  <input type="radio" name="svn_action" value="Commit"
+         id="commit" class="ui-state-default ui-corner-all">
+  <span>|</span>
+-->
+
+  <!-- XXX: not yet supported
+  <label for="add">Add</label>
+  <input type="radio" name="svn_action" value="Add"
+         id="add" class="ui-state-default ui-corner-all">
+  <span>|</span>
+  -->
+
+  <!-- XXX: not yet supported
+  <label for="delete">Delete</label>
+  <input type="radio" name="svn_action" value="Delete"
+         id="delete" class="ui-state-default ui-corner-all">
+  <span>|</span>
+  -->
+
+  <!-- not needed
+  <input name="save_all" value="All" type="button"
+         class="bttn-edit ui-state-default ui-corner-all"
+         onclick="check(document.forms[0].state)">
+
+  <span>|</span>
+  -->
+
+<!--
+  <label for="diff">Diff</label>
+  <input type="radio" name="svn_action" value="Diff"
+         id="diff" class="ui-state-default ui-corner-all">
+  <span>|</span>
+
+  <input name="do_svn_action" value="Do Svn Action" type="button"
+         id="click_svn_action"
+         class="bttn-edit ui-state-default ui-corner-all">
+
+  <input id="refresh_list" type='button' value="Refresh List" >
+-->
+
+  <!--
+  <div style="text-align:right">
+    <label for="show_repo">[Show Repository Tree</label>
+    <input type="checkbox" name="show_repo" value="Show Repository Tree"
+           id="show_repo" class="ui-state-default ui-corner-all">]
+  </div>
+  -->
+
+<!--
+</fieldset>
+</form>
+-->
+
+ <script type="text/javascript">
+   ////values = cgi.cookies['svn_wc_tree_conf']
+   ////$.cookie("example", "foo", { path: '/admin', expires: 7 });
+   ////$.cookie("svn_wc_tree_conf", "foo", { path: '/admin', expires: 7 });
+   ////$.cookie("swt_cgi", "foo", { path: '/admin', expires: 7 });
+   //console.log($.cookie("svn_wc_tree_conf"));
+   //if (! $.cookie("svn_wc_tree_conf")){
+   //  var config = prompt('Please provide path to config file: ', '');
+   //  if (config) $.cookie("svn_wc_tree_conf", config);
+   //  else document.write('SVN config file required');
+   //}
+   //console.log($.cookie("svn_wc_tree_conf"));
+ 
+   //// delete cookie
+   //// $.cookie("example", null);
+ 
+ </script>
+
+ <input type='hidden' id="svn_local_repo_root" value='' />
+
+ <a id='disp_repo_info'>~</a><div id="display_repo_info" class="disp_no"></div>
+ <br/> 
+ <br/> 
+ Filter: <input type='text' id='swt_filter_re' size='25'/> [Limit by Terms, Regex Ok]<br/>
+ Filter: <input type='text' id='swt_filter_amt' size='3'/> [Limit by Amount]
+ <br/> 
+ <br/> 
+ <!-- start: show results from svn actions -->
+ <div id="show_hide_container" class="disp_no">
+  <a id="hide_n_show">[-]</a>
+ </div>
+ <div id="svn_action_results"></div>
+ <!-- end: show results from svn actions -->
+
+  <div class="demo" id="svn_repo_entries_tree" style="height:100%"></div>
+  </body>
+</html>
