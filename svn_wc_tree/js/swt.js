@@ -187,8 +187,8 @@ $(document).ready(function(){
                 var dir = $("#swt_dir").val();
                 //console.log(re_filter);
                 // set current filter to a cookie 
-                $.cookie('swt_filter_re', re_filter);
-                $.cookie('swt_dir', dir);
+                if (re_filter) $.cookie('swt_filter_re', re_filter);
+                if (dir) $.cookie('swt_dir', dir);
                 window.location.reload();
                 //history.go();
               },
@@ -306,10 +306,10 @@ $(document).ready(function(){
     return entries_list;
   }
 
-  function keep_filter(name, re_filter){
+  function keep_filter(name, f_val){
     //console.log(re_filter);
     //$("#swt_filter_re").val(re_filter);
-    $('#'+name).val(re_filter);
+    if (f_val) $('#'+name).val(f_val);
   }
 
   // limit result set with filter
