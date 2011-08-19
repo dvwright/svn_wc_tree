@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.email       = %q{david_v_wright@yahoo.com}
   s.summary     = %q{svn_wc_tree is a web application (GUI) that enables 
                      basic operations on a working copy of a Subversion repository.}
-  s.homepage    = %q{http://www.dwright.us/misc/svn_wc_tree}
+  s.homepage    = %q{https://github.com/dvwright/svn_wc_tree}
   s.description = %q{svn_wc_tree provides an Web Application Front End GUI
                      to a working copy of an remote SVN Repository.}
   s.executables = %q{svn_wc_tree}
