@@ -62,18 +62,19 @@ module SvnRepoClient
     @repo_root = @@svn_wc.svn_repo_working_copy
   end
 
-  def svn_status(f_regex=nil, f_amt=nil)
+  def svn_status(f_regex=nil, f_amt=nil, dir=@repo_root)
       get_repo
       repo_entries = Array.new
       begin
         l_svn_list = Array.new
-        @@svn_wc.status.each { |el|
+        @@svn_wc.status(dir).each { |el|
           status_info = {}
           #status_info[:last_changed_rev] = el[:last_changed_rev]
           status_info[:status] = el[:status]
           status_info[:error] = ''
           status_info[:entry_name] = el[:path]
-          if File.directory?(File.join(@repo_root, el[:path]))
+          #if File.directory?(File.join(@repo_root, el[:path]))
+          if File.directory?(File.join(dir, el[:path]))
             status_info[:kind] = 2 # is dir
           else
             status_info[:kind] = 1 # is 'file'
@@ -232,14 +233,15 @@ module SvnRepoClient
 
   # recursively list entries, provides file or dir info and access to 
   # nice repo/file info
-  def svn_list(f_regex=nil, f_amt=nil)
+  def svn_list(f_regex=nil, f_amt=nil, dir=@repo_root)
       get_repo
       repo_entries = Array.new
       begin
         l_svn_list = Array.new
-        @@svn_wc.list.each { |el|
+        @@svn_wc.list(dir).each { |el|
           status_info = {}
-          fqpn = File.join(@repo_root, el[:entry])
+          #fqpn = File.join(@repo_root, el[:entry])
+          fqpn = File.join(dir, el[:entry])
           #status_info[:last_changed_rev] = el[:last_changed_rev]
           status_info[:entry_name] = fqpn
           status_info[:status] = ' '

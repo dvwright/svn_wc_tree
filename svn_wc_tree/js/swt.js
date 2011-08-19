@@ -55,7 +55,8 @@ $(document).ready(function(){
   var SVN_ENTRIES = []
 
   // 'onload' populate 'keep filter' if has been set
-  keep_filter($.cookie('swt_filter_re'));
+  keep_filter('swt_filter_re', $.cookie('swt_filter_re'));
+  keep_filter('swt_dir', $.cookie('swt_dir'));
 
   // the repo tree
   $(function () {
@@ -183,14 +184,16 @@ $(document).ready(function(){
               label     : "refresh tree",
               action    : function (NODE, TREE_OBJ) {
                 var re_filter = $("#swt_filter_re").val();
+                var dir = $("#swt_dir").val();
                 //console.log(re_filter);
                 // set current filter to a cookie 
                 $.cookie('swt_filter_re', re_filter);
+                $.cookie('swt_dir', dir);
                 window.location.reload();
                 //history.go();
               },
               separator_before : true
-            },
+            }
             //remove : {
             //  label     : "Filesystem Delete",
             //  icon      : "remove",
@@ -220,7 +223,7 @@ $(document).ready(function(){
         }
       },
       //ui : { theme_name : "classic" },
-      ui : { theme_name : "checkbox",
+      ui : { theme_name : "checkbox"
              //theme_path : "/js/svn_wc_tree/source/themes/checkbox/style.css" 
       },
       data : {
@@ -253,6 +256,7 @@ $(document).ready(function(){
             'do_svn_action': 'Do Svn Action',
             'svn_action'   : SVN_ACTION,
             'svn_files'    : [gather_selected_files()],
+            'dir'          : $("#swt_dir").val(),
             'filter_re'    : $("#swt_filter_re").val(),
             'filter_amt'   : $("#swt_filter_amt").val()
           }
@@ -281,6 +285,7 @@ $(document).ready(function(){
       var amount_of_entries = DATA[0].entries.length;
       if (amount_of_entries == 0) {
         if ($("#swt_filter_re").val()) report_no_match_if_filter();
+        if ($("#swt_dir").val()) report_no_match_if_filter();
         else repo_up_to_date();
 
         // use repo root as default when no results
@@ -301,9 +306,10 @@ $(document).ready(function(){
     return entries_list;
   }
 
-  function keep_filter(re_filter){
+  function keep_filter(name, re_filter){
     //console.log(re_filter);
-    $("#swt_filter_re").val(re_filter);
+    //$("#swt_filter_re").val(re_filter);
+    $('#'+name).val(re_filter);
   }
 
   // limit result set with filter

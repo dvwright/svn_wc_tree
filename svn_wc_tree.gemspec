@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = %q{svn_wc_tree}
-  s.version     = "0.0.5"
-  s.date        = %q{2010-10-12}
+  s.version     = "0.0.6"
+  s.date        = %q{2011-08-18}
   s.authors     = ["David Wright"]
   s.email       = %q{david_v_wright@yahoo.com}
   s.summary     = %q{svn_wc_tree is a web application (GUI) that enables 
@@ -17,7 +17,6 @@ Gem::Specification.new do |s|
                      lib/svn_wc_broker.rb
                      lib/svn_wc_client.rb
                      tests/test_installer_bin.rb
-                     LICENSE
                      Manifest
                      README.rdoc
                      svn_conf.yaml

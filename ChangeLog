@@ -1,3 +1,6 @@
+version 0.0.6
+* enhancement: operate on specific dir only, if set
+
 version 0.0.5
 * bug fix: default svn_status uses filter if set
 

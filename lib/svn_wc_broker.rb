@@ -97,7 +97,8 @@ module SvnWcBroker
       # eval known actions only
       # svn_list takes args # svn_status takes args
       if action == 'list' || action == 'status' 
-        eval("svn_#{action}('#{params['filter_re']}','#{params['filter_amt']}')")
+        #eval("svn_#{action}('#{params['filter_re']}','#{params['filter_amt']}')")
+        eval("svn_#{action}('#{params['filter_re']}','#{params['filter_amt']}','#{params['dir']}')")
       else
         # danger will robinson, only eval known supported actions
         eval("svn_#{action}") if SUPPORTED_ACTIONS.index(action)
@@ -114,7 +115,7 @@ module SvnWcBroker
     run_error = String.new
   
     begin
-      svn_status_list = svn_status(params['filter_re'], params['filter_amt'])
+      svn_status_list = svn_status(params['filter_re'], params['filter_amt'], params['dir'])
     rescue Exception => e
       run_error <<  e.message
     end
