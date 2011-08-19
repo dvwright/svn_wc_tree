@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = %q{svn_wc_tree}
-  s.version     = "0.0.7"
+  s.version     = "0.0.8"
   s.date        = %q{2011-08-19}
   s.authors     = ["David Wright"]
   s.email       = %q{david_v_wright@yahoo.com}
