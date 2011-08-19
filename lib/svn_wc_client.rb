@@ -62,9 +62,10 @@ module SvnRepoClient
     @repo_root = @@svn_wc.svn_repo_working_copy
   end
 
-  def svn_status(f_regex=nil, f_amt=nil, dir=@repo_root)
+  def svn_status(f_regex=nil, f_amt=nil, dir=nil)
       get_repo
       repo_entries = Array.new
+      dir = @repo_root unless dir and not dir.empty?
       begin
         l_svn_list = Array.new
         @@svn_wc.status(dir).each { |el|
@@ -233,9 +234,10 @@ module SvnRepoClient
 
   # recursively list entries, provides file or dir info and access to 
   # nice repo/file info
-  def svn_list(f_regex=nil, f_amt=nil, dir=@repo_root)
+  def svn_list(f_regex=nil, f_amt=nil, dir=nil)
       get_repo
       repo_entries = Array.new
+      dir = @repo_root unless dir and not dir.empty?
       begin
         l_svn_list = Array.new
         @@svn_wc.list(dir).each { |el|
