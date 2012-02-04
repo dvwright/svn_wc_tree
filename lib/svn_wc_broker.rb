@@ -79,6 +79,7 @@ module SvnWcBroker
 
     action = params['svn_action'].to_s.strip.downcase
     files  = params['svn_files']
+    @dir   = params['dir']
 
     begin
       if files and files.to_a.size > 0
@@ -97,10 +98,9 @@ module SvnWcBroker
       # eval known actions only
       # svn_list takes args # svn_status takes args
       if action == 'list' || action == 'status' 
-        #eval("svn_#{action}('#{params['filter_re']}','#{params['filter_amt']}')")
         eval("svn_#{action}('#{params['filter_re']}','#{params['filter_amt']}','#{params['dir']}')")
       else
-        # danger will robinson, only eval known supported actions
+        # NOTE only eval known supported actions
         eval("svn_#{action}") if SUPPORTED_ACTIONS.index(action)
       end
     rescue Exception => exn
@@ -158,7 +158,7 @@ module SvnWcBroker
   
   def ret_just_files_list(file_status_list) # :nodoc:
     just_files = Array.new
-    return file_status_list unless file_status_list.class == Array
+    return file_status_list unless file_status_list.respond_to?('each')
     file_status_list.each do |f_list_str|
       f_stat, f_name = f_list_str.split(/\s/)
       just_files.push(f_name)

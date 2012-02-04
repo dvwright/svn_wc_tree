@@ -131,6 +131,7 @@ module SvnRepoClient
       get_repo
       rev = Array.new
       begin
+        raise 'svn commit requires file list!' if @files.empty?
         @content = "Committed. Revision: #{@@svn_wc.commit(@files)}
                                   Files:
                                   #{@files.join("\n")}"
@@ -147,6 +148,7 @@ module SvnRepoClient
       get_repo
       rev = Array.new
       begin
+        raise 'svn add requires file list!' if @files.empty?
         @content = "Added. #{@@svn_wc.add(@files).to_a.join("\n")}"
         rev.push info_data
       rescue SvnWc::RepoAccessError => e
@@ -160,8 +162,17 @@ module SvnRepoClient
   def svn_update
       get_repo
       remote_files = Array.new
+      @dir = @repo_root unless @dir and not @dir.empty?
       begin
-        @content = "Updated: Revision #{@@svn_wc.update.to_a.join("\n")}"
+        #@content = "Updated: Revision #{@@svn_wc.update.to_a.join("\n")}"
+        @content = 'Updated: Revision '
+        @content << @@svn_wc.update(@dir).to_a.join("\n")
+        #if @dir and not @dir.empty?
+        #  @content = 'Updated: Revision '
+        #  @content << @@svn_wc.update(@dir).to_a.join("\n")
+        #else
+        #  @content = "Updated: Revision #{@@svn_wc.update.to_a.join("\n")}"
+        #end
         remote_files.push info_data
       rescue SvnWc::RepoAccessError => e
         @error = e.message
@@ -175,6 +186,7 @@ module SvnRepoClient
       get_repo
       rev = Array.new
       begin
+        raise 'svn delete requires file list!' if @files.empty?
         @content = "Deleted. #{@@svn_wc.delete(@files).to_a.join("\n")}"
         rev.push info_data
       rescue SvnWc::RepoAccessError => e
@@ -203,6 +215,7 @@ module SvnRepoClient
       get_repo
       infos = Array.new
       begin
+        raise 'svn revert requires file list!' if @files.empty?
         @content = "Reverted: #{@@svn_wc.revert(@files)}
                                   Files:
                                   #{@files.join("\n")}"

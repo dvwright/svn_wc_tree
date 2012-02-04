@@ -356,7 +356,8 @@ $(document).ready(function(){
          POST_URL, {
            'do_svn_action': 'Do Svn Action',
            'svn_action'   : svn_action,
-           'svn_files'    : [gather_selected_files()]
+           'svn_files'    : [gather_selected_files()],
+           'dir'          : $("#swt_dir").val()
          },
          // server response for svn action
          function(resp){
