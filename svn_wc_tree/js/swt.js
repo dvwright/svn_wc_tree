@@ -26,6 +26,7 @@ var POST_URL = '';
 
 var STATUS_SPACER = "\t"; // "&nbsp;"
 var SVN_ACTION = '';
+var PASS_USER_SET_DIR = '';
 
 // jQuery BlockUI Plugin (v2)
 $.blockUI.defaults.message = '<img src="img/swt_spinner.gif" /> Processing... ';
@@ -189,7 +190,22 @@ $(document).ready(function(){
                 // set current filter to a cookie 
                 if (re_filter) $.cookie('swt_filter_re', re_filter);
                 if (dir) $.cookie('swt_dir', dir);
+                //console.log(document.referrer);
+                //('#svn_frame').attr('src', $('#svn_frame').attr('src'));
                 window.location.reload();
+                //try{
+                //  //document.getElementById('svn_frame').location.reload();
+                //  if ($.browser.msie){
+                //    document.getElementById('svn_frame').contentWindow.location.reload(true);
+                //  } else {
+                //    document.getElementById('svn_frame').src = document.getElementById('svn_frame').src;
+                //    //('#svn_frame').attr('src', $('#svn_frame').attr('src'));
+                //  }
+                //} 
+                //catch(e){
+                //  alert('moo');
+                //  //window.location.reload();
+                //}
                 //history.go();
               },
               separator_before : true
@@ -252,11 +268,14 @@ $(document).ready(function(){
         },
         beforedata : function(NODE, TREE_OBJ) {
           //console.log('beforedata' + $(NODE).attr('id'));
+          if (!PASS_USER_SET_DIR) PASS_USER_SET_DIR = $("#swt_dir").val();
+
           return {
             'do_svn_action': 'Do Svn Action',
             'svn_action'   : SVN_ACTION,
             'svn_files'    : [gather_selected_files()],
-            'dir'          : $("#swt_dir").val(),
+            //'dir'          : $("#swt_dir").val(),
+            'dir'          : PASS_USER_SET_DIR,
             'filter_re'    : $("#swt_filter_re").val(),
             'filter_amt'   : $("#swt_filter_amt").val()
           }
@@ -352,12 +371,13 @@ $(document).ready(function(){
   function post_req_svn_resp(svn_action) {
     //console.log('post_req_svn_resp');
     $(function() {
+     if (!PASS_USER_SET_DIR) PASS_USER_SET_DIR = $("#swt_dir").val();
       $.post(// post to url
          POST_URL, {
            'do_svn_action': 'Do Svn Action',
            'svn_action'   : svn_action,
            'svn_files'    : [gather_selected_files()],
-           'dir'          : $("#swt_dir").val()
+           'dir'          : PASS_USER_SET_DIR
          },
          // server response for svn action
          function(resp){
@@ -384,19 +404,21 @@ $(document).ready(function(){
            //var abs_pn = info[0] + ' ' + $("#svn_local_repo_root").val() + info[1]
            //console.log('in checked files');
            //console.log(info);
+           PASS_USER_SET_DIR = info[0];
 
-           var abs_pn = info[0] + ' ' + info[1]
+           var abs_pn = info[0] + ' ' + info[1];
 
            // XXX this is a hck fix, figure it out
            // odd bug, svn_files /home/httpd undefined
            // just repo root sent, other files not seen!?
-           if (info[1] === undefined) abs_pn = info[1] + ' ' + info[0]
+           if (info[1] === undefined) abs_pn = info[1] + ' ' + info[0];
 
            svn_files.push(abs_pn);
          }
          //console.log(svn_files);
        }
      )
+     //console.log(svn_files);
      return svn_files;
   }
 
