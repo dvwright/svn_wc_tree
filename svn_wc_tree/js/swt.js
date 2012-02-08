@@ -187,12 +187,15 @@ $(document).ready(function(){
                 var re_filter = $("#swt_filter_re").val();
                 var dir = $("#swt_dir").val();
                 //console.log(re_filter);
+                PASS_USER_SET_DIR = '';
                 // set current filter to a cookie 
                 if (re_filter) $.cookie('swt_filter_re', re_filter);
                 if (dir) $.cookie('swt_dir', dir);
+
+                window.location.reload();
+
                 //console.log(document.referrer);
                 //('#svn_frame').attr('src', $('#svn_frame').attr('src'));
-                window.location.reload();
                 //try{
                 //  //document.getElementById('svn_frame').location.reload();
                 //  if ($.browser.msie){
@@ -268,14 +271,13 @@ $(document).ready(function(){
         },
         beforedata : function(NODE, TREE_OBJ) {
           //console.log('beforedata' + $(NODE).attr('id'));
-          if (!PASS_USER_SET_DIR) PASS_USER_SET_DIR = $("#swt_dir").val();
 
           return {
             'do_svn_action': 'Do Svn Action',
             'svn_action'   : SVN_ACTION,
             'svn_files'    : [gather_selected_files()],
-            //'dir'          : $("#swt_dir").val(),
-            'dir'          : PASS_USER_SET_DIR,
+            'dir'          : $("#swt_dir").val(),
+            'udir'         : PASS_USER_SET_DIR,
             'filter_re'    : $("#swt_filter_re").val(),
             'filter_amt'   : $("#swt_filter_amt").val()
           }
@@ -371,13 +373,13 @@ $(document).ready(function(){
   function post_req_svn_resp(svn_action) {
     //console.log('post_req_svn_resp');
     $(function() {
-     if (!PASS_USER_SET_DIR) PASS_USER_SET_DIR = $("#swt_dir").val();
       $.post(// post to url
          POST_URL, {
            'do_svn_action': 'Do Svn Action',
            'svn_action'   : svn_action,
            'svn_files'    : [gather_selected_files()],
-           'dir'          : PASS_USER_SET_DIR
+           'dir'          : $("#swt_dir").val(),
+           'udir'         : PASS_USER_SET_DIR
          },
          // server response for svn action
          function(resp){
@@ -391,6 +393,7 @@ $(document).ready(function(){
 
   function gather_selected_files(){
     var svn_files = new Array;
+    PASS_USER_SET_DIR = '';
     ($.tree.plugins.checkbox.get_checked(
       $.tree.reference("#svn_repo_entries_tree"))).each(
        function () {
