@@ -85,12 +85,13 @@ module SvnWcBroker
       if files and files.to_a.size > 0
         files_striped = ret_just_files_list(
                            process_params_to_list_of_files(files.to_s))
+        #return svn_results debug_request(process_params_to_list_of_files(files.to_s))
         @files = files_striped.to_a.uniq
         #@files.uniq
         #return svn_results debug_request(@files)
 
         # diff need status info
-        if ('diff' == action ) 
+        if ('diff' == action || 'update_selected' == action)
            @files = process_params_to_list_of_files(files.to_s).to_a.uniq
         end
 

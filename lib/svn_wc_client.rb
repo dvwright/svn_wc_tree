@@ -132,15 +132,17 @@ module SvnRepoClient
      svn_list(f_regex, f_amt, dir)
   end
 
-  def not_new_rev(svn_e)
+  def not_new_rev(svn_e, ent)
     lcr = svn_e[:last_changed_rev] rescue nil
     return true if lcr.nil?
-    enty = lcr[:entry]
-    return true if enty.nil?
-    # skip if file is on remote and local, we want remote only
-    return true if File.file?(enty) || File.directory?(enty)
     # return false if is a new revision
-    return false if lcr > @current_rev
+    #return false if lcr > @current_rev
+    #raise "1.#{enty} 2.#{svn_e[:entry]} 3.#{svn_e.inspect}"
+    if lcr > @current_rev
+      # skip if file is on remote and local, we want remote only
+      return true if File.file?(ent) || File.directory?(ent)
+      return false
+    end
     true
   end
   private :not_new_rev
@@ -221,21 +223,45 @@ module SvnRepoClient
       remote_files
   end
 
+  ## update, returns 'updated' message, revision and update data
+  #def svn_update_selected
+  #    get_repo
+  #    remote_files = Array.new
+  #    begin
+  #      #@error = "1.#{@files} 2.#{@files.class} 3.#{@files[1]}"
+  #      #remote_files.push info_data
+  #      raise 'svn update selected requires file list!' if @files.nil?
+  #      @content = 'Updated: Revision '
+  #      @content << @@svn_wc.update(@files.to_s).to_a.join("\n")
+  #      remote_files.push info_data
+  #    rescue SvnWc::RepoAccessError => e
+  #      @error = e.message
+  #      remote_files.push info_data
+  #    end
+  #    remote_files
+  #end
+ 
   # update, returns 'updated' message, revision and update data
   def svn_update_selected
-      get_repo
-      remote_files = Array.new
-      begin
-        @content = 'Updated: Revision '
-        @content << @@svn_wc.update(@files.to_s).to_a.join("\n")
-        remote_files.push info_data
-        #@error = "1.#{@files} 2.#{files}"
-        #remote_files.push info_data
-      rescue SvnWc::RepoAccessError => e
-        @error = e.message
-        remote_files.push info_data
-      end
-      remote_files
+      raise 'svn update selected requires file list!' if @files.nil?
+     remote_files = Array.new
+     @files.each { |f_list_str|
+       f_stat, f_name = f_list_str.split(/\s/)
+       #@error = "1.#{@files} 2.#{@files.class} 3.#{@files[1]}"
+       #remote_files.push info_data
+       begin
+         get_repo
+         @path = f_name
+         #@content = @@svn_wc.diff(f_name).to_s
+         @content = 'Updated: Revision '
+         @content << @@svn_wc.update(f_name).to_s
+         remote_files.push info_data
+       rescue SvnWc::RepoAccessError => e
+         @error = e.message
+         remote_files.push info_data
+       end
+     }
+     remote_files
   end
 
   # delete
@@ -311,10 +337,10 @@ module SvnRepoClient
       begin
         l_svn_list = Array.new
         @@svn_wc.list(dir).each { |el|
-          next if not_new_rev(el) if @current_rev
-          status_info = {}
-          #fqpn = File.join(@repo_root, el[:entry])
           fqpn = File.join(dir, el[:entry])
+          next if not_new_rev(el, fqpn) if @current_rev
+          #fqpn = File.join(@repo_root, el[:entry])
+          status_info = {}
           #status_info[:last_changed_rev] = el[:last_changed_rev]
           status_info[:entry_name] = fqpn
           status_info[:status] = ' '
