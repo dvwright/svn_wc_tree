@@ -97,11 +97,30 @@ $(document).ready(function(){
                           },
               separator_before : true
             },
+            // svn status -u menu option
+            svn_status_u : {
+              label     : 'svn status -u',
+              icon      : '',
+              action    : function (NODE, TREE_OBJ) { 
+                            SVN_ACTION = 'status_show_updates';
+                            TREE_OBJ.callback('beforedata', [NODE, TREE_OBJ]);
+                            $.tree.focused().refresh();//refresh does a http POST
+                          },
+              separator_before : true
+            },
             // svn update menu option
             svn_update : {
               label     : "svn update",
               action    : function (NODE, TREE_OBJ) {
                             post_req_svn_resp('update');
+                          },
+              separator_before : true
+            },
+            // svn update menu option
+            svn_update_u : {
+              label     : "svn update selected",
+              action    : function (NODE, TREE_OBJ) {
+                            post_req_svn_resp('update_selected');
                           },
               separator_before : true
             },
@@ -416,7 +435,7 @@ $(document).ready(function(){
            // just repo root sent, other files not seen!?
            if (info[1] === undefined) abs_pn = info[1] + ' ' + info[0];
 
-           svn_files.push(abs_pn);
+           if (abs_pn != undefined) svn_files.push(abs_pn);
          }
          //console.log(svn_files);
        }

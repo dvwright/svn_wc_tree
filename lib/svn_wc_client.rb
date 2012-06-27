@@ -104,6 +104,46 @@ module SvnRepoClient
       repo_entries
   end
 
+  # emulate a svn status -u
+  # returns entries on remote host not on local
+  # shows what files would be updated from an svn up
+
+  def svn_status_show_updates(f_regex=nil, f_amt=nil, dir=nil)
+      get_repo
+      repo_entries = Array.new
+      dir = @repo_root unless dir and not dir.empty?
+      # only way to test
+      # @error = "1.#{f_regex} 2.#{f_amt} 3.#{dir}"
+      # repo_entries.push info_data
+      @current_rev = nil
+      begin
+        @@svn_wc.info(dir).each do |r|
+          @current_rev = r[1] if r[0].to_s == 'rev'
+        end
+      rescue SvnWc::RepoAccessError => e
+        @error = e.message
+        repo_entries.push info_data  
+      ensure
+        if @current_rev.nil?
+          @error = 'Error: Revision Unknown'
+          repo_entries.push info_data
+        end
+      end
+     svn_list(f_regex, f_amt, dir)
+  end
+
+  def not_new_rev(svn_e)
+    lcr = svn_e[:last_changed_rev] rescue nil
+    return true if lcr.nil?
+    enty = lcr[:entry]
+    return true if enty.nil?
+    # skip if file is on remote and local, we want remote only
+    return true if File.file?(enty) || File.directory?(enty)
+    # return false if is a new revision
+    return false if lcr > @current_rev
+    true
+  end
+  private :not_new_rev
  
   # diff current to previous (HEAD only)
   # returns diff content
@@ -174,6 +214,23 @@ module SvnRepoClient
         #  @content = "Updated: Revision #{@@svn_wc.update.to_a.join("\n")}"
         #end
         remote_files.push info_data
+      rescue SvnWc::RepoAccessError => e
+        @error = e.message
+        remote_files.push info_data
+      end
+      remote_files
+  end
+
+  # update, returns 'updated' message, revision and update data
+  def svn_update_selected
+      get_repo
+      remote_files = Array.new
+      begin
+        @content = 'Updated: Revision '
+        @content << @@svn_wc.update(@files.to_s).to_a.join("\n")
+        remote_files.push info_data
+        #@error = "1.#{@files} 2.#{files}"
+        #remote_files.push info_data
       rescue SvnWc::RepoAccessError => e
         @error = e.message
         remote_files.push info_data
@@ -254,6 +311,7 @@ module SvnRepoClient
       begin
         l_svn_list = Array.new
         @@svn_wc.list(dir).each { |el|
+          next if not_new_rev(el) if @current_rev
           status_info = {}
           #fqpn = File.join(@repo_root, el[:entry])
           fqpn = File.join(dir, el[:entry])

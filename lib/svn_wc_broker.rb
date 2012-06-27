@@ -33,9 +33,9 @@ module SvnWcBroker
   #--
   # this list gets 'evaled' is why
   #++
-  SUPPORTED_ACTIONS = %w(add commit delete info 
-                         revert list ignore diff update 
-                         status)
+  SUPPORTED_ACTIONS = %w(add commit delete info
+                         revert list ignore diff update
+                         status status_show_updates update_selected)
 
   # set abs_path to your configuration file
   def set_conf_file(conf) ; @conf_file = conf ; end
@@ -97,7 +97,7 @@ module SvnWcBroker
       end
       # eval known actions only
       # svn_list takes args # svn_status takes args
-      if action == 'list' || action == 'status' 
+      if action == 'list' || action == 'status' || action == 'status_show_updates'
         eval("svn_#{action}('#{params['filter_re']}','#{params['filter_amt']}','#{params['dir']}')")
       else
         # NOTE only eval known supported actions
@@ -161,6 +161,7 @@ module SvnWcBroker
     return file_status_list unless file_status_list.respond_to?('each')
     file_status_list.each do |f_list_str|
       f_stat, f_name = f_list_str.split(/\s/)
+      next if f_name == 'undefined' # yes the str undefined
       just_files.push(f_name)
     end
     just_files
