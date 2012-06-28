@@ -150,6 +150,7 @@ module SvnRepoClient
   # diff current to previous (HEAD only)
   # returns diff content
   def svn_diff
+     raise 'svn diff requires file selections!' if @files.nil?
      file_list_diffs = Array.new
      @files.each { |f_list_str|
        f_stat, f_name = f_list_str.split(/\s/)
@@ -173,7 +174,7 @@ module SvnRepoClient
       get_repo
       rev = Array.new
       begin
-        raise 'svn commit requires file list!' if @files.empty?
+        raise 'svn commit requires file list!' if @files.nil?
         @content = "Committed. Revision: #{@@svn_wc.commit(@files)}
                                   Files:
                                   #{@files.join("\n")}"
@@ -190,7 +191,7 @@ module SvnRepoClient
       get_repo
       rev = Array.new
       begin
-        raise 'svn add requires file list!' if @files.empty?
+        raise 'svn add requires file list!' if @files.nil?
         @content = "Added. #{@@svn_wc.add(@files).to_a.join("\n")}"
         rev.push info_data
       rescue SvnWc::RepoAccessError => e
@@ -269,7 +270,7 @@ module SvnRepoClient
       get_repo
       rev = Array.new
       begin
-        raise 'svn delete requires file list!' if @files.empty?
+        raise 'svn delete requires file list!' if @files.nil?
         @content = "Deleted. #{@@svn_wc.delete(@files).to_a.join("\n")}"
         rev.push info_data
       rescue SvnWc::RepoAccessError => e
@@ -298,7 +299,7 @@ module SvnRepoClient
       get_repo
       infos = Array.new
       begin
-        raise 'svn revert requires file list!' if @files.empty?
+        raise 'svn revert requires file list!' if @files.nil?
         @content = "Reverted: #{@@svn_wc.revert(@files)}
                                   Files:
                                   #{@files.join("\n")}"
